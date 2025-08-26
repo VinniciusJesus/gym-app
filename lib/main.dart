@@ -49,7 +49,7 @@ Future<void> main() async {
         ChangeNotifierProvider<AuthNotifier>.value(value: authNotifier),
         Provider<FirebaseAnalytics>.value(value: FirebaseAnalytics.instance),
       ],
-      child: App(),
+      child: App(router: router),
     ),
   );
 }
@@ -74,7 +74,9 @@ GoRouter buildRouter(AuthNotifier auth, FirebaseAnalytics analytics) {
     refreshListenable: auth,
     redirect: (ctx, state) {
       final loggedIn = auth.user != null;
-      final loggingIn = state.matchedLocation == '/login';
+      final loggingIn =
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/signup';
       if (!loggedIn && !loggingIn) return '/login';
       if (loggedIn && loggingIn) return '/';
       return null;
@@ -83,26 +85,9 @@ GoRouter buildRouter(AuthNotifier auth, FirebaseAnalytics analytics) {
     routes: [
       GoRoute(path: '/', builder: (ctx, st) => const HomePage()),
       GoRoute(path: '/login', builder: (ctx, st) => const LoginPage()),
+      GoRoute(path: '/signup', builder: (ctx, st) => const SignUpPage()),
     ],
   );
-}
-
-class App extends StatelessWidget {
-  const App({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AppState()..init(),
-
-      child: MaterialApp(
-        navigatorKey: navigatorKey,
-        scaffoldMessengerKey: scaffoldMessengerKey,
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(useMaterial3: true),
-        home: const SignUpPage(),
-      ),
-    );
-  }
 }
 
 class HomePage extends StatelessWidget {
@@ -124,12 +109,38 @@ class LoginPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () async {
-            await FirebaseAuth.instance.signInAnonymously();
-          },
-          child: const Text('Entrar anonimamente'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signInAnonymously();
+              },
+              child: const Text('Entrar anonimamente'),
+            ),
+            TextButton(
+              onPressed: () => context.go('/signup'),
+              child: const Text('Criar conta'),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class App extends StatelessWidget {
+  const App({super.key, required this.router});
+  final GoRouter router;
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => AppState()..init(),
+      child: MaterialApp.router(
+        scaffoldMessengerKey: scaffoldMessengerKey,
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(useMaterial3: true),
+        routerConfig: router,
       ),
     );
   }

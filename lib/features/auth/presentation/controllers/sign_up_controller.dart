@@ -74,10 +74,12 @@ class SignUpController extends ChangeNotifier {
       await remote.upsert(model);
       await app.setUser(model);
     } on FirebaseAuthException catch (e) {
-      error = errors.map(e);
+      await SignUpErrorMapper().show(e);
+
       rethrow;
     } catch (e) {
-      error = errors.map(e);
+      await SignUpErrorMapper().show(e);
+
       rethrow;
     }
   }

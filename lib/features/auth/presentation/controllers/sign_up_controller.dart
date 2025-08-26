@@ -1,35 +1,66 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/app_state.dart';
-import '../../data/models/user_model.dart';
-import '../../data/repositories/auth_repository.dart';
+import '../../../../../core/app_state.dart';
 
 class SignUpController extends ChangeNotifier {
-  final AuthRepository repo;
   final AppState app;
+
+  final formKey = GlobalKey<FormState>();
+  final nameEC = TextEditingController();
+  final emailEC = TextEditingController();
+  final passEC = TextEditingController();
+  final confirmEC = TextEditingController();
+
+  bool obscure = true;
+  bool obscureConfirm = true;
   bool loading = false;
   String? error;
-  UserModel? user;
 
-  SignUpController({required this.app, AuthRepository? repository})
-    : repo = repository ?? AuthRepository();
+  SignUpController({required this.app});
+
+  void toggleObscure() {
+    obscure = !obscure;
+    notifyListeners();
+  }
+
+  void toggleObscureConfirm() {
+    obscureConfirm = !obscureConfirm;
+    notifyListeners();
+  }
+
+  Future<void> onSubmit() async {
+    loading = true;
+    error = null;
+    notifyListeners();
+    try {
+      await submit(
+        name: nameEC.text.trim(),
+        email: emailEC.text.trim(),
+        password: passEC.text,
+      );
+      // defina navegação/efeitos fora da view (ex.: callback do router).
+    } catch (_) {
+      error = 'Erro ao cadastrar';
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> submit({
     required String name,
     required String email,
     required String password,
   }) async {
-    loading = true;
-    error = null;
-    notifyListeners();
-    try {
-      user = await repo.signUp(name: name, email: email, password: password);
-      await app.setUser(user);
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      loading = false;
-      notifyListeners();
-    }
+    // integração real; defina error = 'mensagem' em caso de falha
+  }
+
+  @override
+  void dispose() {
+    nameEC.dispose();
+    emailEC.dispose();
+    passEC.dispose();
+    confirmEC.dispose();
+    super.dispose();
   }
 }

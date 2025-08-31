@@ -7,31 +7,28 @@ import '../../../../core/shared/navigation/navigation.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../data/datasources/auth_service.dart';
 import '../../data/datasources/firestore_user_store.dart';
-import '../../data/errors/signup_error_mapper.dart';
+import '../../data/errors/sign_in_error_map.dart';
 import '../../data/models/user_model.dart';
 
-class SignUpController extends ChangeNotifier {
+class SignInController extends ChangeNotifier {
   final AppState app;
   final AuthService auth;
   final FirestoreUserStore remote;
-  final SignUpErrorMapper errors;
+  final SignInErrorMapper errors;
 
   final formKey = GlobalKey<FormState>();
-  final nameEC = TextEditingController();
   final emailEC = TextEditingController();
   final passEC = TextEditingController();
-  final confirmEC = TextEditingController();
 
   bool obscure = true;
-  bool obscureConfirm = true;
   bool loading = false;
   String? error;
 
-  SignUpController({
+  SignInController({
     required this.app,
     required this.auth,
     required this.remote,
-    this.errors = const SignUpErrorMapper(),
+    this.errors = const SignInErrorMapper(),
   });
 
   void toggleObscure() {
@@ -39,9 +36,11 @@ class SignUpController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleObscureConfirm() {
-    obscureConfirm = !obscureConfirm;
-    notifyListeners();
+  Future<void> onForgotPassword() async {
+    if (emailEC.text.trim().isEmpty) return;
+    try {
+      await auth.resetPassword(emailEC.text.trim());
+    } catch (_) {}
   }
 
   Future<void> onSubmit() async {
@@ -49,55 +48,49 @@ class SignUpController extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      await submit(
-        name: nameEC.text.trim(),
-        email: emailEC.text.trim(),
-        password: passEC.text,
-      );
+      await submit(email: emailEC.text.trim(), password: passEC.text);
     } catch (_) {
-      error ??= 'Erro ao cadastrar';
+      error ??= 'Erro ao entrar';
     } finally {
       loading = false;
       notifyListeners();
     }
   }
 
-  Future<void> submit({
-    required String name,
-    required String email,
-    required String password,
-  }) async {
+  Future<void> submit({required String email, required String password}) async {
     try {
-      final cred = await auth.signUp(email, password);
-      final model = UserModel.basic(
-        id: cred.user!.uid,
-        name: name,
-        email: email,
+      final cred = await auth.signIn(email, password);
+      final uid = cred.user!.uid;
+
+      UserModel? model;
+      try {
+        model = await remote.getById(uid);
+      } catch (_) {}
+
+      model ??= UserModel.basic(
+        id: uid,
+        name: cred.user!.displayName ?? '',
+        email: cred.user!.email ?? email,
       );
 
-      await remote.upsert(model);
       await app.setUser(model);
 
       Navigator.of(
         navigatorKey.currentContext!,
       ).push(slideFromRight(page: HomePage()));
     } on FirebaseAuthException catch (e) {
-      await SignUpErrorMapper().show(e);
-
+      await SignInErrorMapper().show(e);
       rethrow;
     } catch (e) {
-      await SignUpErrorMapper().show(e);
-
+      await SignInErrorMapper().show(e);
       rethrow;
     }
   }
 
   @override
   void dispose() {
-    nameEC.dispose();
     emailEC.dispose();
     passEC.dispose();
-    confirmEC.dispose();
     super.dispose();
   }
 }

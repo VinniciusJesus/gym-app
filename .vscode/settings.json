@@ -101,7 +101,7 @@
       "javascriptreact",
       "graphql"
     ],
-    "dart.flutterSdkPath": ".fvm/versions/3.35.1",
+    "dart.flutterSdkPath": ".fvm/flutter_sdk",
     "editor.semanticHighlighting.enabled": false,
     "breadcrumbs.enabled": false,
     "workbench.productIconTheme": "fluent-icons",

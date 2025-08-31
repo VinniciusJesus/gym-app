@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/app_state.dart';
+import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/sign_up_page.dart';
 import 'firebase_options.dart';
 
@@ -83,50 +84,11 @@ GoRouter buildRouter(AuthNotifier auth, FirebaseAnalytics analytics) {
     },
     observers: [FirebaseAnalyticsObserver(analytics: analytics)],
     routes: [
-      GoRoute(path: '/', builder: (ctx, st) => const HomePage()),
+      GoRoute(path: '/', builder: (ctx, st) => const LoginPage()),
       GoRoute(path: '/login', builder: (ctx, st) => const LoginPage()),
       GoRoute(path: '/signup', builder: (ctx, st) => const SignUpPage()),
     ],
   );
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final user = context.read<AuthNotifier>().user;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: Center(child: Text(user?.email ?? 'Usuário')),
-    );
-  }
-}
-
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton(
-              onPressed: () async {
-                await FirebaseAuth.instance.signInAnonymously();
-              },
-              child: const Text('Entrar anonimamente'),
-            ),
-            TextButton(
-              onPressed: () => context.go('/signup'),
-              child: const Text('Criar conta'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class App extends StatelessWidget {

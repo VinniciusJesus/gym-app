@@ -1,27 +1,29 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gym/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:provider/provider.dart';
 import 'package:validatorless/validatorless.dart';
 
 import '../../../../core/app_state.dart';
+import '../../../../core/shared/navigation/navigation.dart';
 import '../../../../core/shared/ui/auth_input.dart';
 import '../../../../core/shared/ui/primary_button.dart';
 import '../../data/datasources/auth_service.dart';
 import '../../data/datasources/firestore_user_store.dart';
-import '../controllers/sign_up_controller.dart';
+import '../controllers/sign_in_controller.dart';
 import '../ui/auth_footer_row.dart';
 import '../ui/auth_header.dart';
 import '../ui/or_divider.dart';
 
-class SignUpPage extends StatelessWidget {
-  const SignUpPage({super.key});
+class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create:
-          (ctx) => SignUpController(
+          (ctx) => SignInController(
             app: ctx.read<AppState>(),
             auth: AuthService(
               FirebaseAuth.instance,
@@ -29,10 +31,10 @@ class SignUpPage extends StatelessWidget {
             ),
             remote: FirestoreUserStore(),
           ),
-      child: Consumer<SignUpController>(
+      child: Consumer<SignInController>(
         builder: (_, ctrl, __) {
           return Scaffold(
-            backgroundColor: Color(0xFFF4F6F8),
+            backgroundColor: const Color(0xFFF4F6F8),
             body: SafeArea(
               child: Center(
                 child: SingleChildScrollView(
@@ -43,24 +45,14 @@ class SignUpPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const AuthHeader(
-                          title: 'Crie sua conta',
-                          subtitle:
-                              'Experiência simples e agradável para seus treinos.',
+                          title: 'Bem-vindo de volta',
+                          subtitle: 'Entre para continuar seus treinos.',
                         ),
                         const SizedBox(height: 18),
                         Form(
                           key: ctrl.formKey,
                           child: Column(
                             children: [
-                              AuthInput(
-                                controller: ctrl.nameEC,
-                                label: 'Nome completo',
-                                hint: 'Seu nome',
-                                validator: Validatorless.required(
-                                  'Informe seu nome',
-                                ),
-                              ),
-                              const SizedBox(height: 10),
                               AuthInput(
                                 controller: ctrl.emailEC,
                                 label: 'Email',
@@ -75,9 +67,9 @@ class SignUpPage extends StatelessWidget {
                               AuthInput(
                                 controller: ctrl.passEC,
                                 label: 'Senha',
-                                hint: 'Mínimo 6 caracteres',
+                                hint: 'Sua senha',
                                 obscure: ctrl.obscure,
-                                action: TextInputAction.next,
+                                action: TextInputAction.done,
                                 suffix: IconButton(
                                   onPressed: ctrl.toggleObscure,
                                   icon: Icon(
@@ -87,41 +79,25 @@ class SignUpPage extends StatelessWidget {
                                     size: 20,
                                   ),
                                 ),
-                                validator: Validatorless.multiple([
-                                  Validatorless.required('Informe a senha'),
-                                  Validatorless.min(6, 'Mínimo 6 caracteres'),
-                                ]),
-                              ),
-                              const SizedBox(height: 10),
-                              AuthInput(
-                                controller: ctrl.confirmEC,
-                                label: 'Confirmar senha',
-                                hint: 'Repita a senha',
-                                obscure: ctrl.obscureConfirm,
-                                action: TextInputAction.done,
-                                suffix: IconButton(
-                                  onPressed: ctrl.toggleObscureConfirm,
-                                  icon: Icon(
-                                    ctrl.obscureConfirm
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                    size: 20,
-                                  ),
+                                validator: Validatorless.required(
+                                  'Informe a senha',
                                 ),
-                                validator: Validatorless.multiple([
-                                  Validatorless.required('Confirme a senha'),
-                                  Validatorless.compare(
-                                    ctrl.passEC,
-                                    'As senhas não conferem',
-                                  ),
-                                ]),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed:
+                                ctrl.loading ? null : ctrl.onForgotPassword,
+                            child: const Text('Esqueci minha senha'),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
                         PrimaryButton(
-                          label: 'Cadastrar',
+                          label: 'Entrar',
                           loading: ctrl.loading,
                           onPressed:
                               ctrl.loading
@@ -132,7 +108,6 @@ class SignUpPage extends StatelessWidget {
                                         false;
                                     if (!ok) return;
                                     await ctrl.onSubmit();
-                                    // Sem SnackBar aqui. Fluxo pós-submit fica a cargo do caller/navegação.
                                   },
                         ),
                         const SizedBox(height: 14),
@@ -140,12 +115,13 @@ class SignUpPage extends StatelessWidget {
                         const SizedBox(height: 14),
                         SocialRow(),
                         const SizedBox(height: 14),
-
                         AuthFooterRow(
-                          text: 'Já tem conta?',
-                          actionLabel: 'Entrar',
+                          text: 'Não tem conta?',
+                          actionLabel: 'Criar conta',
                           onTap: () {
-                            Navigator.pop(context);
+                            Navigator.of(
+                              context,
+                            ).push(slideFromRight(page: SignUpPage()));
                           },
                         ),
                       ],

@@ -17,7 +17,9 @@ import '../ui/auth_header.dart';
 import '../ui/or_divider.dart';
 
 class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+  LoginPage({super.key});
+
+  final auth = AuthService(FirebaseAuth.instance, FirebaseAnalytics.instance);
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +27,7 @@ class LoginPage extends StatelessWidget {
       create:
           (ctx) => SignInController(
             app: ctx.read<AppState>(),
-            auth: AuthService(
-              FirebaseAuth.instance,
-              FirebaseAnalytics.instance,
-            ),
+            auth: auth,
             remote: FirestoreUserStore(),
           ),
       child: Consumer<SignInController>(
@@ -90,8 +89,9 @@ class LoginPage extends StatelessWidget {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed:
-                                ctrl.loading ? null : ctrl.onForgotPassword,
+                            onPressed: () {
+                              ctrl.loading ? null : ctrl.onForgotPassword(auth);
+                            },
                             child: const Text('Esqueci minha senha'),
                           ),
                         ),

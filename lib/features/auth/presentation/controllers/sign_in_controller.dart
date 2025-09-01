@@ -9,6 +9,7 @@ import '../../data/datasources/auth_service.dart';
 import '../../data/datasources/firestore_user_store.dart';
 import '../../data/errors/sign_in_error_map.dart';
 import '../../data/models/user_model.dart';
+import '../ui/reset_passwod_dialog.dart';
 
 class SignInController extends ChangeNotifier {
   final AppState app;
@@ -34,11 +35,16 @@ class SignInController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> onForgotPassword() async {
-    if (emailEC.text.trim().isEmpty) return;
-    try {
-      await auth.resetPassword(emailEC.text.trim());
-    } catch (_) {}
+  Future<void> onForgotPassword(AuthService authService) async {
+    await showDialog(
+      context: navigatorKey.currentContext!,
+      barrierDismissible: true,
+      builder: (_) => ResetPasswordDialog(authService: authService),
+    );
+
+    // try {
+    //   await auth.resetPassword(emailEC.text.trim());
+    // } catch (_) {}
   }
 
   Future<void> onSubmit() async {

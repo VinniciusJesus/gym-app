@@ -85,8 +85,8 @@ GoRouter buildRouter(AuthNotifier auth, FirebaseAnalytics analytics) {
     },
     observers: [FirebaseAnalyticsObserver(analytics: analytics)],
     routes: [
-      GoRoute(path: '/', builder: (ctx, st) => const LoginPage()),
-      GoRoute(path: '/login', builder: (ctx, st) => const LoginPage()),
+      GoRoute(path: '/', builder: (ctx, st) => LoginPage()),
+      GoRoute(path: '/login', builder: (ctx, st) => LoginPage()),
       GoRoute(path: '/signup', builder: (ctx, st) => const SignUpPage()),
     ],
   );

@@ -73,6 +73,7 @@ GoRouter buildRouter(AuthNotifier auth, FirebaseAnalytics analytics) {
   return GoRouter(
     initialLocation: '/',
     refreshListenable: auth,
+    navigatorKey: navigatorKey,
     redirect: (ctx, state) {
       final loggedIn = auth.user != null;
       final loggingIn =
@@ -93,6 +94,7 @@ GoRouter buildRouter(AuthNotifier auth, FirebaseAnalytics analytics) {
 
 class App extends StatelessWidget {
   const App({super.key, required this.router});
+
   final GoRouter router;
   @override
   Widget build(BuildContext context) {

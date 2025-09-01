@@ -12,13 +12,13 @@ class SignInErrorMapper {
   String map(Object error) {
     if (error is FirebaseAuthException) {
       switch (error.code) {
-        case 'invalid-email':
-          return 'E-mail inválido';
+        case 'email-already-in-use':
+          return 'E-mail em uso';
         case 'user-disabled':
           return 'Usuário desativado';
         case 'user-not-found':
           return 'Usuário não encontrado';
-        case 'wrong-password':
+        case 'invalid-credential':
           return 'Senha incorreta';
         case 'missing-password':
           return 'Informe a senha';
@@ -38,8 +38,9 @@ class SignInErrorMapper {
   ErrorUi ui(Object error) {
     if (error is FirebaseAuthException) {
       switch (error.code) {
+        case 'email-already-in-use':
         case 'invalid-email':
-        case 'wrong-password':
+        case 'invalid-credential':
         case 'missing-password':
         case 'network-request-failed':
           return ErrorUi.snack;

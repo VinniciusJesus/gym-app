@@ -14,7 +14,6 @@ class SignInController extends ChangeNotifier {
   final AppState app;
   final AuthService auth;
   final FirestoreUserStore remote;
-  final SignInErrorMapper errors;
 
   final formKey = GlobalKey<FormState>();
   final emailEC = TextEditingController();
@@ -28,7 +27,6 @@ class SignInController extends ChangeNotifier {
     required this.app,
     required this.auth,
     required this.remote,
-    this.errors = const SignInErrorMapper(),
   });
 
   void toggleObscure() {
@@ -60,24 +58,26 @@ class SignInController extends ChangeNotifier {
   Future<void> submit({required String email, required String password}) async {
     try {
       final cred = await auth.signIn(email, password);
-      final uid = cred.user!.uid;
+      if (cred != null) {
+        final uid = cred.user!.uid;
 
-      UserModel? model;
-      try {
-        model = await remote.getById(uid);
-      } catch (_) {}
+        UserModel? model;
+        try {
+          model = await remote.getById(uid);
+        } catch (_) {}
 
-      model ??= UserModel.basic(
-        id: uid,
-        name: cred.user!.displayName ?? '',
-        email: cred.user!.email ?? email,
-      );
+        model ??= UserModel.basic(
+          id: uid,
+          name: cred.user!.displayName ?? '',
+          email: cred.user!.email ?? email,
+        );
 
-      await app.setUser(model);
+        await app.setUser(model);
 
-      Navigator.of(
-        navigatorKey.currentContext!,
-      ).push(slideFromRight(page: HomePage()));
+        Navigator.of(
+          navigatorKey.currentContext!,
+        ).push(slideFromRight(page: HomePage()));
+      }
     } on FirebaseAuthException catch (e) {
       await SignInErrorMapper().show(e);
       rethrow;

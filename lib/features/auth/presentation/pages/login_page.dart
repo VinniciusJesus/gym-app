@@ -1,12 +1,11 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:gym/features/auth/presentation/pages/sign_up_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:validatorless/validatorless.dart';
 
 import '../../../../core/app_state.dart';
-import '../../../../core/shared/navigation/navigation.dart';
 import '../../../../core/shared/ui/auth_input.dart';
 import '../../../../core/shared/ui/primary_button.dart';
 import '../../data/datasources/auth_service.dart';
@@ -119,9 +118,7 @@ class LoginPage extends StatelessWidget {
                           text: 'Não tem conta?',
                           actionLabel: 'Criar conta',
                           onTap: () {
-                            Navigator.of(
-                              context,
-                            ).push(slideFromRight(page: SignUpPage()));
+                            context.push('/signup');
                           },
                         ),
                       ],

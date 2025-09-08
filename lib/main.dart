@@ -9,12 +9,15 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gym/features/home/presentation/pages/home_page.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/app_state.dart';
+import 'core/shared/navigation/custom_transitions.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/sign_up_page.dart';
+import 'features/profile/presentation/pages/profile_pages.dart';
 import 'firebase_options.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -74,20 +77,20 @@ GoRouter buildRouter(AuthNotifier auth, FirebaseAnalytics analytics) {
     initialLocation: '/',
     refreshListenable: auth,
     navigatorKey: navigatorKey,
-    redirect: (ctx, state) {
-      final loggedIn = auth.user != null;
-      final loggingIn =
-          state.matchedLocation == '/login' ||
-          state.matchedLocation == '/signup';
-      if (!loggedIn && !loggingIn) return '/login';
-      if (loggedIn && loggingIn) return '/';
-      return null;
-    },
+
     observers: [FirebaseAnalyticsObserver(analytics: analytics)],
     routes: [
-      GoRoute(path: '/', builder: (ctx, st) => LoginPage()),
+      GoRoute(path: '/', builder: (ctx, st) => ProfilePage()),
       GoRoute(path: '/login', builder: (ctx, st) => LoginPage()),
-      GoRoute(path: '/signup', builder: (ctx, st) => const SignUpPage()),
+      GoRoute(path: '/home', builder: (ctx, st) => HomePage()),
+      GoRoute(
+        path: '/signup',
+        pageBuilder:
+            (context, state) => slideFromRight(
+              page: const SignUpPage(),
+              key: const ValueKey('signup'),
+            ),
+      ),
     ],
   );
 }

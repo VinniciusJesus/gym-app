@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'navigation.dart';
 
@@ -25,24 +26,26 @@ PageRouteBuilder<T> slideFromBottom<T>({
   );
 }
 
-PageRouteBuilder<T> slideFromRight<T>({
+CustomTransitionPage<T> slideFromRight<T>({
   required Widget page,
   Duration duration = const Duration(milliseconds: 400),
+  LocalKey? key,
 }) {
-  return PageRouteBuilder(
+  return CustomTransitionPage<T>(
+    key: key,
     transitionDuration: duration,
-    pageBuilder: (_, animation, __) {
+    child: page,
+    transitionsBuilder: (_, animation, __, child) {
       final curved = CurvedAnimation(
         parent: animation,
         curve: Curves.easeOutQuart,
       );
-
       return SlideTransition(
         position: Tween<Offset>(
-          begin: const Offset(1, 0), // Começa da direita
+          begin: const Offset(1, 0), // começa da direita
           end: Offset.zero,
         ).animate(curved),
-        child: page,
+        child: child,
       );
     },
   );

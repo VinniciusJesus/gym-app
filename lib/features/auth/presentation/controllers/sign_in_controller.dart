@@ -1,10 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gym/main.dart';
 
 import '../../../../../core/app_state.dart';
-import '../../../../core/shared/navigation/navigation.dart';
-import '../../../home/presentation/pages/home_page.dart';
 import '../../data/datasources/auth_service.dart';
 import '../../data/datasources/firestore_user_store.dart';
 import '../../data/errors/sign_in_error_map.dart';
@@ -80,9 +79,7 @@ class SignInController extends ChangeNotifier {
 
         await app.setUser(model);
 
-        Navigator.of(
-          navigatorKey.currentContext!,
-        ).push(slideFromRight(page: HomePage()));
+        navigatorKey.currentContext!.go('/home');
       }
     } on FirebaseAuthException catch (e) {
       await SignInErrorMapper().show(e);

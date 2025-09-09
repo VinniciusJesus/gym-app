@@ -9,6 +9,7 @@ import 'package:validatorless/validatorless.dart';
 import '../../../../core/shared/ui/auth_input.dart';
 import '../../../../core/shared/ui/card_widget.dart';
 import '../../../../core/shared/ui/switch_tile.dart';
+import '../../../../core/shared/utils/validators.dart';
 import '../controllers/profile_controller.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -147,6 +148,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               FilteringTextInputFormatter.digitsOnly,
                               PesoInputFormatter(),
                             ],
+                            validator: validarPesoBF,
                           ),
                           const SizedBox(height: 10),
                           AuthInput(
@@ -158,6 +160,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               FilteringTextInputFormatter.digitsOnly,
                               AlturaInputFormatter(),
                             ],
+                            validator: validarAlturaBF,
                           ),
                         ],
                       ),

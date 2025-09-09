@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:brasil_fields/brasil_fields.dart';
@@ -10,6 +11,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/app_state.dart';
+import '../../../../core/shared/ui/notice_dialog.dart';
+import '../../../../core/shared/utils/internet_checker.dart';
 import '../../../auth/data/datasources/auth_service.dart';
 import '../../../auth/data/models/user_model.dart';
 
@@ -118,22 +121,25 @@ class ProfileController extends ChangeNotifier {
     String? previousUrl,
   }) async {
     if (_pendingAvatar == null) return null;
+    final online = await hasInternet();
+    if (!online) throw const SocketException('offline');
     final file = File(_pendingAvatar!.path);
-    final storage = FirebaseStorage.instance;
-    final ref = storage.ref().child('users/$uid/avatar.jpg');
-    await ref.putFile(
-      file,
-      SettableMetadata(contentType: 'image/jpeg', cacheControl: 'no-cache'),
-    );
+    final ref = FirebaseStorage.instance.ref().child('users/$uid/avatar.jpg');
+    await ref
+        .putFile(
+          file,
+          SettableMetadata(contentType: 'image/jpeg', cacheControl: 'no-cache'),
+        )
+        .timeout(const Duration(seconds: 20));
     if (previousUrl != null && previousUrl.isNotEmpty) {
       try {
-        final oldRef = storage.refFromURL(previousUrl);
+        final oldRef = FirebaseStorage.instance.refFromURL(previousUrl);
         if (oldRef.fullPath != ref.fullPath) {
-          await oldRef.delete();
+          await oldRef.delete().timeout(const Duration(seconds: 10));
         }
       } catch (_) {}
     }
-    return await ref.getDownloadURL();
+    return await ref.getDownloadURL().timeout(const Duration(seconds: 10));
   }
 
   Future<void> onSave() async {
@@ -145,12 +151,20 @@ class ProfileController extends ChangeNotifier {
     try {
       final u = navigatorKey.currentContext!.read<AppState>().currentUser;
       if (u == null) {
-        saving = false;
-        notifyListeners();
+        showSnack('Usuário não encontrado.', error: true);
         return;
       }
 
-      final maybeAvatarUrl = await _uploadAvatarIfNeeded(u.id);
+      final online = await hasInternet();
+      if (!online) {
+        showSnack('Sem conexão com a internet. Tente novamente.', error: true);
+        return;
+      }
+
+      final maybeAvatarUrl = await _uploadAvatarIfNeeded(
+        u.id,
+        previousUrl: u.avatarUrl,
+      );
       final newAvatarUrl = maybeAvatarUrl ?? u.avatarUrl;
 
       final updated = UserModel(
@@ -164,15 +178,33 @@ class ProfileController extends ChangeNotifier {
         avatarUrl: newAvatarUrl,
       );
 
-      await remote.updateUser(
-        user: updated,
-        notifications: notifications,
-        weeklySummary: weeklySummary,
-      );
+      await remote
+          .updateUser(
+            user: updated,
+            notifications: notifications,
+            weeklySummary: weeklySummary,
+          )
+          .timeout(const Duration(seconds: 15));
 
       avatarUrl = newAvatarUrl;
       _pendingAvatar = null;
       await navigatorKey.currentContext!.read<AppState>().setUser(updated);
+
+      showSnack('Perfil atualizado com sucesso.');
+    } on TimeoutException {
+      showSnack('Operação demorou demais. Tente novamente.', error: true);
+    } on SocketException {
+      showSnack('Sem conexão com a internet. Tente novamente.', error: true);
+    } on FirebaseException catch (e) {
+      final net = e.code == 'network-request-failed';
+      showSnack(
+        net
+            ? 'Falha de rede. Tente novamente.'
+            : 'Erro ao salvar: ${e.message ?? e.code}',
+        error: true,
+      );
+    } catch (_) {
+      showSnack('Ocorreu um erro ao salvar.', error: true);
     } finally {
       saving = false;
       notifyListeners();

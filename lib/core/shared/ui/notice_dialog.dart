@@ -1,9 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:gym/main.dart';
 
 import '../theme/app_colors.dart';
 import 'primary_button.dart';
 
 enum NoticeKind { success, error, info }
+
+void showSnack(String message, {bool error = false}) {
+  final ctx = navigatorKey.currentContext;
+  final messengerA = ctx != null ? ScaffoldMessenger.maybeOf(ctx) : null;
+  final ScaffoldMessengerState? messengerB =
+      scaffoldMessengerKey.currentState is ScaffoldMessengerState
+          ? scaffoldMessengerKey.currentState
+          : null;
+  final messenger = messengerA ?? messengerB;
+  if (messenger != null) {
+    messenger.clearSnackBars();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: error ? Colors.red : Colors.green,
+      ),
+    );
+  }
+}
 
 class NoticeDialog extends StatefulWidget {
   final NoticeKind kind;

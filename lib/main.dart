@@ -18,8 +18,8 @@ import 'core/shared/navigation/custom_transitions.dart';
 import 'features/auth/data/datasources/auth_service.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/sign_up_page.dart';
+import 'features/plans/presentation/pages/plans_page.dart';
 import 'features/profile/presentation/controllers/profile_controller.dart';
-import 'features/profile/presentation/pages/profile_pages.dart';
 import 'firebase_options.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -67,6 +67,9 @@ Future<void> main() async {
           create:
               (context) => ProfileController(auth: context.read<AuthService>()),
         ),
+        ChangeNotifierProvider<PlansController>(
+          create: (context) => PlansController(),
+        ),
       ],
       child: App(router: router),
     ),
@@ -97,7 +100,7 @@ GoRouter buildRouter(AuthNotifier auth, FirebaseAnalytics analytics) {
     routes: [
       GoRoute(path: '/', builder: (ctx, st) => SplashPage()),
       GoRoute(path: '/login', builder: (ctx, st) => LoginPage()),
-      GoRoute(path: '/home', builder: (ctx, st) => ProfilePage()),
+      GoRoute(path: '/home', builder: (ctx, st) => PlansPage()),
       GoRoute(
         path: '/signup',
         pageBuilder:

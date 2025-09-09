@@ -6,6 +6,7 @@ class UserModel {
   final DateTime? birthDate;
   final double? weight;
   final double? height;
+  final String? avatarUrl;
 
   UserModel({
     required this.id,
@@ -15,6 +16,7 @@ class UserModel {
     this.birthDate,
     this.weight,
     this.height,
+    this.avatarUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,6 +28,7 @@ class UserModel {
       'birthDate': birthDate?.toUtc().toIso8601String(),
       'weight': weight,
       'height': height,
+      'avatarUrl': avatarUrl,
     };
   }
 
@@ -41,6 +44,7 @@ class UserModel {
           DateTime.tryParse(map['birthDate'] as String? ?? '')?.toLocal(),
       weight: (map['weight'] is num) ? (map['weight'] as num).toDouble() : null,
       height: (map['height'] is num) ? (map['height'] as num).toDouble() : null,
+      avatarUrl: map['avatarUrl'] as String?,
     );
   }
 
@@ -51,6 +55,7 @@ class UserModel {
     DateTime? birthDate,
     double? weight,
     double? height,
+    String? avatarUrl,
   }) {
     return UserModel(
       id: id,
@@ -60,6 +65,7 @@ class UserModel {
       birthDate: birthDate,
       weight: weight,
       height: height,
+      avatarUrl: avatarUrl,
     );
   }
 }

@@ -1,6 +1,9 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gym/features/auth/data/datasources/local_user_store.dart';
 
+import '../../../../main.dart';
 import '../errors/sign_in_error_map.dart';
 
 class AuthService {
@@ -68,6 +71,12 @@ class AuthService {
   Future<void> signOut() async {
     await _auth.signOut();
     await _analytics.logEvent(name: 'logout');
+
+    await LocalUserStore().clear();
+
+    if (navigatorKey.currentContext!.mounted) {
+      navigatorKey.currentContext!.go('/login');
+    }
   }
 
   User? get currentUser => _auth.currentUser;

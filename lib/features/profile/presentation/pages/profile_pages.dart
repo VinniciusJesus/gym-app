@@ -58,13 +58,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         children: [
                           CircleAvatar(
                             radius: 36,
-                            backgroundImage:
-                                c.avatarUrl != null
-                                    ? NetworkImage(c.avatarUrl!)
-                                    : null,
+                            backgroundImage: c.avatarImage,
                             backgroundColor: const Color(0xFFEDEFF2),
                             child:
-                                c.avatarUrl == null
+                                c.avatarImage == null
                                     ? const Icon(
                                       Icons.person_outline,
                                       size: 32,
@@ -128,14 +125,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             validator: Validatorless.required(
                               'Informe seu nome',
                             ),
-                          ),
-                          const SizedBox(height: 10),
-                          AuthInput(
-                            controller: c.emailEC,
-                            label: 'Email',
-                            hint: 'voce@email.com',
-                            readOnly: true,
-                            keyboardType: TextInputType.emailAddress,
                           ),
                           const SizedBox(height: 10),
                           AuthInput(

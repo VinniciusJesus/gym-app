@@ -1,7 +1,12 @@
+import 'dart:io';
+
+import 'package:brasil_fields/brasil_fields.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:gym/features/profile/data/datasources/user_remote.dart';
 import 'package:gym/main.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/app_state.dart';
@@ -21,6 +26,8 @@ class ProfileController extends ChangeNotifier {
   final heightEC = TextEditingController();
 
   String? avatarUrl;
+  XFile? _pendingAvatar;
+
   bool notifications = true;
   bool weeklySummary = true;
   bool darkMode = false;
@@ -33,16 +40,20 @@ class ProfileController extends ChangeNotifier {
   Future<void> init() async {
     loading = true;
     notifyListeners();
+
     final u = navigatorKey.currentContext!.read<AppState>().currentUser;
     if (u != null) {
-      nameEC.text = u.name ?? '';
-      // emailEC.text = u.email ?? '';
-      // phoneEC.text = u.phone ?? '';
-      // birthEC.text = u.birth ?? '';
-      // avatarUrl = u.avatarUrl;
-      // notifications = u.notifications ?? true;
-      // weeklySummary = u.weeklySummary ?? true;
+      nameEC.text = u.name;
+      emailEC.text = u.email;
+      birthEC.text =
+          u.birthDate != null ? UtilData.obterDataDDMMAAAA(u.birthDate!) : '';
+      weightEC.text =
+          u.weight != null ? u.weight!.toString().replaceAll('.', ',') : '';
+      heightEC.text =
+          u.height != null ? u.height!.toString().replaceAll('.', ',') : '';
+      avatarUrl = u.avatarUrl;
     }
+
     loading = false;
     notifyListeners();
   }
@@ -57,30 +68,23 @@ class ProfileController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setDarkMode(bool v) {
-    darkMode = v;
-    // app.setThemeMode(v ? ThemeMode.dark : ThemeMode.light);
-    notifyListeners();
+  ImageProvider? get avatarImage {
+    if (_pendingAvatar != null) return FileImage(File(_pendingAvatar!.path));
+    if (avatarUrl != null && avatarUrl!.isNotEmpty)
+      return NetworkImage(avatarUrl!);
+    return null;
   }
 
   Future<void> onChangeAvatar() async {
-    // final url = await remote.pickAndUploadAvatar();
-    // if (url != null) {
-    //   avatarUrl = url;
-    //   notifyListeners();
-    // }
-  }
-
-  Future<void> onChangePassword() async {
-    // await auth.sendPasswordReset(emailEC.text);
-  }
-
-  Future<void> onManageSessions() async {
-    // await auth.refreshTokensEverywhere();
-  }
-
-  Future<void> onDeleteAccount() async {
-    // await remote.requestAccountDeletion();
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      imageQuality: 85,
+    );
+    if (picked == null) return;
+    _pendingAvatar = picked;
+    notifyListeners();
   }
 
   Future<void> onSignOut() async {
@@ -109,37 +113,70 @@ class ProfileController extends ChangeNotifier {
     return double.tryParse(s);
   }
 
+  Future<String?> _uploadAvatarIfNeeded(
+    String uid, {
+    String? previousUrl,
+  }) async {
+    if (_pendingAvatar == null) return null;
+    final file = File(_pendingAvatar!.path);
+    final storage = FirebaseStorage.instance;
+    final ref = storage.ref().child('users/$uid/avatar.jpg');
+    await ref.putFile(
+      file,
+      SettableMetadata(contentType: 'image/jpeg', cacheControl: 'no-cache'),
+    );
+    if (previousUrl != null && previousUrl.isNotEmpty) {
+      try {
+        final oldRef = storage.refFromURL(previousUrl);
+        if (oldRef.fullPath != ref.fullPath) {
+          await oldRef.delete();
+        }
+      } catch (_) {}
+    }
+    return await ref.getDownloadURL();
+  }
+
   Future<void> onSave() async {
     final ok = formKey.currentState?.validate() ?? false;
     if (!ok) return;
     saving = true;
     notifyListeners();
 
-    final u = navigatorKey.currentContext!.read<AppState>().currentUser;
-    if (u == null) {
+    try {
+      final u = navigatorKey.currentContext!.read<AppState>().currentUser;
+      if (u == null) {
+        saving = false;
+        notifyListeners();
+        return;
+      }
+
+      final maybeAvatarUrl = await _uploadAvatarIfNeeded(u.id);
+      final newAvatarUrl = maybeAvatarUrl ?? u.avatarUrl;
+
+      final updated = UserModel(
+        id: u.id,
+        name: nameEC.text.trim(),
+        email: emailEC.text.trim(),
+        createdAt: u.createdAt,
+        birthDate: _parseBirth(birthEC.text),
+        weight: _parseNum(weightEC.text),
+        height: _parseNum(heightEC.text),
+        avatarUrl: newAvatarUrl,
+      );
+
+      await remote.updateUser(
+        user: updated,
+        notifications: notifications,
+        weeklySummary: weeklySummary,
+      );
+
+      avatarUrl = newAvatarUrl;
+      _pendingAvatar = null;
+      await navigatorKey.currentContext!.read<AppState>().setUser(updated);
+    } finally {
       saving = false;
       notifyListeners();
-      return;
     }
-
-    final updated = UserModel(
-      id: u.id,
-      name: nameEC.text.trim(),
-      email: emailEC.text.trim(),
-      createdAt: u.createdAt,
-      birthDate: _parseBirth(birthEC.text),
-      weight: _parseNum(weightEC.text),
-      height: _parseNum(heightEC.text),
-    );
-
-    await remote.updateUser(
-      user: updated,
-      notifications: notifications,
-      weeklySummary: weeklySummary,
-    );
-
-    saving = false;
-    notifyListeners();
   }
 
   @override

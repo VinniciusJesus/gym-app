@@ -23,7 +23,12 @@ class SwitchTile extends StatelessWidget {
         subtitle,
         style: const TextStyle(color: AppColors.textSub),
       ),
-      trailing: Switch.adaptive(value: value, onChanged: onChanged),
+      trailing: Switch.adaptive(
+        value: value,
+        onChanged: onChanged,
+        activeColor: Colors.white,
+        activeTrackColor: AppColors.primary,
+      ),
     );
   }
 }

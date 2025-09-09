@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppInputStyles {
   static InputDecoration decoration({
@@ -55,6 +56,8 @@ class AuthInput extends StatelessWidget {
   final TextInputType? keyboardType;
   final Widget? suffix;
   final String? Function(String?)? validator;
+  final bool readOnly;
+  final List<TextInputFormatter>? inputFormatters;
 
   const AuthInput({
     super.key,
@@ -66,6 +69,8 @@ class AuthInput extends StatelessWidget {
     this.keyboardType,
     this.suffix,
     this.validator,
+    this.readOnly = false,
+    this.inputFormatters,
   });
 
   @override
@@ -73,6 +78,8 @@ class AuthInput extends StatelessWidget {
     return TextFormField(
       controller: controller,
       obscureText: obscure,
+      readOnly: readOnly,
+      inputFormatters: inputFormatters,
       decoration: AppInputStyles.decoration(
         context: context,
         label: label,

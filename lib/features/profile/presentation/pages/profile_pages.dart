@@ -1,5 +1,6 @@
+import 'package:brasil_fields/brasil_fields.dart';
 import 'package:flutter/material.dart';
-import 'package:gym/core/app_state.dart';
+import 'package:flutter/services.dart';
 import 'package:gym/core/shared/theme/app_colors.dart';
 import 'package:gym/core/shared/ui/primary_button.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'package:validatorless/validatorless.dart';
 import '../../../../core/shared/ui/auth_input.dart';
 import '../../../../core/shared/ui/card_widget.dart';
 import '../../../../core/shared/ui/switch_tile.dart';
+import '../controllers/profile_controller.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -17,62 +19,18 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final formKey = GlobalKey<FormState>();
-  final nameEC = TextEditingController();
-  final emailEC = TextEditingController();
-  final phoneEC = TextEditingController();
-  final birthEC = TextEditingController();
-
-  String? avatarUrl;
-  bool notifications = true;
-  bool weeklySummary = true;
-  bool saving = false;
-
   @override
   void initState() {
     super.initState();
-    final u = context.read<AppState>().currentUser;
-    if (u != null) {
-      nameEC.text = u.name ?? '';
-      emailEC.text = u.email ?? '';
-      // phoneEC.text = u.phone ?? '';
-      // birthEC.text = u.birth ?? '';
-      // avatarUrl = u.avatarUrl;
-      // notifications = u.notifications ?? true;
-      // weeklySummary = u.weeklySummary ?? true;
-    }
-  }
-
-  @override
-  void dispose() {
-    nameEC.dispose();
-    emailEC.dispose();
-    phoneEC.dispose();
-    birthEC.dispose();
-    super.dispose();
-  }
-
-  Future<void> onSave() async {
-    final ok = formKey.currentState?.validate() ?? false;
-    if (!ok) return;
-    setState(() => saving = true);
-    final app = context.read<AppState>();
-    // final prev = app.currentUser ?? UserModel.empty();
-    // final updated = prev.copyWith(
-    //   name: nameEC.text.trim(),
-    //   email: emailEC.text.trim(),
-    //   phone: phoneEC.text.trim(),
-    //   birth: birthEC.text.trim(),
-    //   avatarUrl: avatarUrl,
-    //   notifications: notifications,
-    //   weeklySummary: weeklySummary,
-    // );
-    // await app.setUser(updated);
-    setState(() => saving = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileController>().init();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.watch<ProfileController>();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(
@@ -91,7 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 680),
               child: Form(
-                key: formKey,
+                key: c.formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -101,12 +59,12 @@ class _ProfilePageState extends State<ProfilePage> {
                           CircleAvatar(
                             radius: 36,
                             backgroundImage:
-                                avatarUrl != null
-                                    ? NetworkImage(avatarUrl!)
+                                c.avatarUrl != null
+                                    ? NetworkImage(c.avatarUrl!)
                                     : null,
                             backgroundColor: const Color(0xFFEDEFF2),
                             child:
-                                avatarUrl == null
+                                c.avatarUrl == null
                                     ? const Icon(
                                       Icons.person_outline,
                                       size: 32,
@@ -120,9 +78,9 @@ class _ProfilePageState extends State<ProfilePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  nameEC.text.isEmpty
+                                  c.nameEC.text.isEmpty
                                       ? 'Seu nome'
-                                      : nameEC.text,
+                                      : c.nameEC.text,
                                   style: const TextStyle(
                                     fontSize: 16.5,
                                     fontWeight: FontWeight.w600,
@@ -130,9 +88,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  emailEC.text.isEmpty
+                                  c.emailEC.text.isEmpty
                                       ? 'seu@email.com'
-                                      : emailEC.text,
+                                      : c.emailEC.text,
                                   style: const TextStyle(
                                     color: AppColors.textSub,
                                   ),
@@ -141,14 +99,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                           TextButton.icon(
-                            onPressed: () async {
-                              // final u = context.read<AppState>().currentUser;
-                              // if (u == null) return;
-                              // // final newUrl = await LocalUserStore().pickAndUploadAvatar();
-                              // if (newUrl == null) return;
-                              // setState(() => avatarUrl = newUrl);
-                              // await context.read<AppState>().setUser(u.copyWith(avatarUrl: newUrl));
-                            },
+                            onPressed: c.onChangeAvatar,
                             style: TextButton.styleFrom(
                               foregroundColor: AppColors.primaryDark,
                               padding: const EdgeInsets.symmetric(
@@ -171,7 +122,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Column(
                         children: [
                           AuthInput(
-                            controller: nameEC,
+                            controller: c.nameEC,
                             label: 'Nome',
                             hint: 'Seu nome completo',
                             validator: Validatorless.required(
@@ -180,28 +131,44 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(height: 10),
                           AuthInput(
-                            controller: emailEC,
+                            controller: c.emailEC,
                             label: 'Email',
                             hint: 'voce@email.com',
+                            readOnly: true,
                             keyboardType: TextInputType.emailAddress,
-                            validator: Validatorless.multiple([
-                              Validatorless.required('Informe o email'),
-                              Validatorless.email('Email inválido'),
-                            ]),
                           ),
                           const SizedBox(height: 10),
                           AuthInput(
-                            controller: phoneEC,
-                            label: 'Telefone',
-                            hint: '(00) 90000-0000',
-                            keyboardType: TextInputType.phone,
-                          ),
-                          const SizedBox(height: 10),
-                          AuthInput(
-                            controller: birthEC,
+                            controller: c.birthEC,
                             label: 'Data de nascimento',
                             hint: 'dd/mm/aaaa',
                             keyboardType: TextInputType.datetime,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              DataInputFormatter(),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          AuthInput(
+                            controller: c.weightEC,
+                            label: 'Peso',
+                            hint: 'Ex: 65.7',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              PesoInputFormatter(),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          AuthInput(
+                            controller: c.heightEC,
+                            label: 'Altura',
+                            hint: 'Ex: 1.69',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              AlturaInputFormatter(),
+                            ],
                           ),
                         ],
                       ),
@@ -214,15 +181,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           SwitchTile(
                             title: 'Notificações',
                             subtitle: 'Receber avisos e lembretes',
-                            value: notifications,
-                            onChanged: (v) => setState(() => notifications = v),
+                            value: c.notifications,
+                            onChanged: c.setNotifications,
                           ),
                           const Divider(height: 1),
                           SwitchTile(
                             title: 'Resumo semanal',
                             subtitle: 'Relatório com seus dados',
-                            value: weeklySummary,
-                            onChanged: (v) => setState(() => weeklySummary = v),
+                            value: c.weeklySummary,
+                            onChanged: c.setWeeklySummary,
                           ),
                         ],
                       ),
@@ -230,12 +197,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 24),
                     PrimaryButton(
                       label: 'Salvar alterações',
-                      loading: saving,
-                      onPressed: saving ? null : onSave,
+                      loading: c.saving,
+                      onPressed: c.saving ? null : c.onSave,
                     ),
                     const SizedBox(height: 12),
                     TextButton(
-                      onPressed: context.read<AppState>().logout,
+                      onPressed: c.onSignOut,
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.textSub,
                         padding: const EdgeInsets.symmetric(vertical: 10),

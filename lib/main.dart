@@ -18,6 +18,7 @@ import 'core/shared/navigation/custom_transitions.dart';
 import 'features/auth/data/datasources/auth_service.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/sign_up_page.dart';
+import 'features/plans/presentation/controllers/ficha_controller.dart';
 import 'features/plans/presentation/pages/ficha_create_page.dart';
 import 'features/plans/presentation/pages/plans_page.dart';
 import 'features/profile/presentation/controllers/profile_controller.dart';
@@ -45,15 +46,13 @@ Future<void> main() async {
     persistenceEnabled: true,
   );
 
-  final authNotifier = AuthNotifier(FirebaseAuth.instance);
-  final router = buildRouter(authNotifier, FirebaseAnalytics.instance);
+  final router = buildRouter(FirebaseAnalytics.instance);
 
   runApp(
     MultiProvider(
       providers: [
         Provider<SharedPreferences>.value(value: prefs),
         Provider<FlutterSecureStorage>.value(value: secure),
-        ChangeNotifierProvider<AuthNotifier>.value(value: authNotifier),
         Provider<FirebaseAuth>.value(value: FirebaseAuth.instance),
         Provider<FirebaseAnalytics>.value(value: FirebaseAnalytics.instance),
         ChangeNotifierProvider<AppState>(create: (_) => AppState()),
@@ -80,31 +79,16 @@ Future<void> main() async {
   );
 }
 
-class AuthNotifier extends ChangeNotifier {
-  AuthNotifier(this._auth) {
-    _sub = _auth.authStateChanges().listen((_) => notifyListeners());
-  }
-  final FirebaseAuth _auth;
-  late final StreamSubscription<User?> _sub;
-  User? get user => _auth.currentUser;
-  @override
-  void dispose() {
-    _sub.cancel();
-    super.dispose();
-  }
-}
-
-GoRouter buildRouter(AuthNotifier auth, FirebaseAnalytics analytics) {
+GoRouter buildRouter(FirebaseAnalytics analytics) {
   return GoRouter(
     initialLocation: '/',
-    refreshListenable: auth,
     navigatorKey: navigatorKey,
 
     observers: [FirebaseAnalyticsObserver(analytics: analytics)],
     routes: [
       GoRoute(path: '/', builder: (ctx, st) => SplashPage()),
       GoRoute(path: '/login', builder: (ctx, st) => LoginPage()),
-      GoRoute(path: '/home', builder: (ctx, st) => PlansPage()),
+      GoRoute(path: '/home', builder: (ctx, st) => FichaCreatePage()),
       GoRoute(
         path: '/signup',
         pageBuilder:

@@ -37,7 +37,7 @@ class _PlansPageState extends State<PlansPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: c.onCreateFicha,
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add, color: AppColors.primary),
         label: const Text('Nova Ficha'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,

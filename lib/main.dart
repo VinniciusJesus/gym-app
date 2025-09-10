@@ -18,6 +18,7 @@ import 'core/shared/navigation/custom_transitions.dart';
 import 'features/auth/data/datasources/auth_service.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/sign_up_page.dart';
+import 'features/plans/presentation/pages/ficha_create_page.dart';
 import 'features/plans/presentation/pages/plans_page.dart';
 import 'features/profile/presentation/controllers/profile_controller.dart';
 import 'firebase_options.dart';
@@ -69,6 +70,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider<PlansController>(
           create: (context) => PlansController(),
+        ),
+        ChangeNotifierProvider<FichaController>(
+          create: (context) => FichaController(),
         ),
       ],
       child: App(router: router),

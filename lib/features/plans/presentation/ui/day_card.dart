@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:gym/core/shared/ui/card_widget.dart';
+import 'package:gym/features/plans/data/models/exercise_model.dart';
 
 import '../../../../core/shared/theme/app_colors.dart';
 
 class DayCard extends StatelessWidget {
   final TextEditingController titleController;
   final bool collapsed;
-  final List<String> exercises;
+  final List<ExerciseModel> exercises;
   final VoidCallback onToggleCollapse;
   final VoidCallback onRemove;
   final VoidCallback onAddExercise;
@@ -140,7 +141,7 @@ class DayCard extends StatelessWidget {
                                   (e) => ListTile(
                                     dense: true,
                                     contentPadding: EdgeInsets.zero,
-                                    title: Text(e),
+                                    title: Text(e.name),
                                     leading: const Icon(Icons.fitness_center),
                                   ),
                                 )

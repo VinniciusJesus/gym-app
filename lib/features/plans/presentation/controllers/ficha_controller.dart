@@ -1,5 +1,9 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../data/models/exercise_model.dart';
 import '../../data/models/training_day_model.dart';
 
 class FichaController extends ChangeNotifier {
@@ -9,6 +13,12 @@ class FichaController extends ChangeNotifier {
 
   void init() {
     if (days.isEmpty) addDay();
+  }
+
+  void addExercisesToDay(int dayIndex, List<ExerciseModel> items) {
+    final day = days[dayIndex];
+    day.exercises.addAll(items);
+    notifyListeners();
   }
 
   void addDay() {
@@ -33,6 +43,9 @@ class FichaController extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<ExerciseModel> allExercises = [];
+  bool _exercisesLoaded = false;
+
   Future<void> onSave() async {
     if (saving) return;
     if (!(formKey.currentState?.validate() ?? false)) return;
@@ -40,6 +53,15 @@ class FichaController extends ChangeNotifier {
     notifyListeners();
     await Future.delayed(const Duration(milliseconds: 600));
     saving = false;
+    notifyListeners();
+  }
+
+  Future<void> loadExercises() async {
+    if (_exercisesLoaded) return;
+    final raw = await rootBundle.loadString('assets/exercises.json');
+    final List data = json.decode(raw);
+    allExercises = data.map((e) => ExerciseModel.fromMap(e)).toList();
+    _exercisesLoaded = true;
     notifyListeners();
   }
 

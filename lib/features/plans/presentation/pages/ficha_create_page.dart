@@ -3,8 +3,10 @@ import 'package:gym/core/shared/ui/primary_button.dart';
 import 'package:gym/core/shared/ui/secondary_button.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/models/exercise_model.dart';
 import '../controllers/ficha_controller.dart';
 import '../ui/day_card.dart';
+import 'exercise_picker_page.dart';
 
 class FichaCreatePage extends StatefulWidget {
   const FichaCreatePage({super.key});
@@ -70,8 +72,20 @@ class _FichaCreatePageState extends State<FichaCreatePage> {
                                 exercises: day.exercises,
                                 onToggleCollapse: () => c.toggleCollapse(index),
                                 onRemove: () => c.removeDay(index),
-                                onAddExercise:
-                                    () => c.addExercisePlaceholder(index),
+                                onAddExercise: () async {
+                                  final picked = await Navigator.of(
+                                    context,
+                                  ).push<List<ExerciseModel>>(
+                                    MaterialPageRoute(
+                                      builder: (_) => ExercisePickerPage(),
+                                    ),
+                                  );
+
+                                  if (picked != null && picked.isNotEmpty) {
+                                    c.addExercisesToDay(index, picked);
+                                  }
+                                },
+
                                 margin: EdgeInsets.only(
                                   bottom: index == c.days.length - 1 ? 24 : 12,
                                 ),
